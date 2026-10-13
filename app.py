@@ -4,21 +4,21 @@ import numpy as np
 
 # Configuración de página
 st.set_page_config(
-    page_title="Regalías con Impacto - Cesar",
-    page_icon="🏛️",
+    page_title="Regalías del Carbón con Impacto - Cesar",
+    page_icon="⛏️",
     layout="wide"
 )
 
-# Título Principal y Descripción
-st.title("🏛️ Regalías con Impacto: Evaluación Multidimensional y Social (Cesar 2020-2026)")
+# Título Principal y Descripción orientada al Carbón y Transición
+st.title("⛏️ Regalías del Carbón con Impacto: Evaluación Territorial y Social (Cesar 2020-2026)")
 st.markdown("""
-**Plataforma de evaluación ex-post y ex-ante del Sistema General de Regalías (SGR)** fundamentada en el **Enfoque de las Capacidades de Amartya Sen**.
-Integra un **Índice Multidimensional de Desarrollo Social ($IMSC_m$)** que cruza ejecución contractual, transición productiva, desempleo, educación, NBI y servicios públicos.
+**Plataforma de evaluación ex-post y ex-ante del Sistema General de Regalías (SGR)** fundamentada en el **Enfoque de las Capacidades de Amartya Sen**. 
+Diseñada para evaluar el rendimiento de los recursos provenientes de la **minería del carbón**, detectar elefantes blancos, medir la **Transición Productiva ($IST_m$)** hacia economías diversificadas (agroindustria, turismo y energías renovables) y su impacto real en la reducción del NBI del DANE en el departamento del Cesar.
 """)
 
-# --- Carga de Base de Datos Multidimensional ---
+# --- Carga de Datos Oficiales del Proyecto (Regalías Mineras) ---
 @st.cache_data
-def load_multidimensional_data():
+def load_project_data():
     data = {
         'municipio': [
             'Valledupar', 'Aguachica', 'Agustín Codazzi', 'Bosconia', 
@@ -32,15 +32,13 @@ def load_multidimensional_data():
         'proyectos_operativos': [10, 6, 6, 2, 5, 0, 8, 4, 2],
         'proyectos_inoperativos_liquidados': [3, 1, 2, 4, 0, 7, 2, 0, 1],
         'alertas_entes_control': [1, 0, 1, 2, 0, 3, 1, 0, 0],
+        # Inversión orientada a la descarbonización y transición productiva
         'inversion_transicion': [
             119559119900, 88607559600, 130972912100, 5876209200, 
             11307180000, 54556345600, 63135032200, 16073883270, 4282383040
         ],
-        # Nuevas variables socioeconómicas y del mercado laboral
-        'tasa_desempleo': [14.2, 12.8, 15.5, 13.9, 18.2, 16.0, 11.4, 13.5, 12.1], # %
-        'cobertura_educativa': [82.5, 78.0, 74.2, 71.5, 68.0, 70.4, 79.1, 76.5, 80.2], # %
-        'delta_nbi': [4.7, 4.1, 4.2, 3.3, 5.1, 3.5, 3.8, 3.5, 3.6], # Puntos de reducción
-        'acceso_servicios_publicos': [79.0, 72.5, 68.0, 65.1, 59.4, 63.0, 75.2, 70.1, 77.4] # %
+        'eficiencia_contractual': [0.75, 0.82, 0.70, 0.55, 0.88, 0.40, 0.78, 0.80, 0.85],
+        'delta_nbi': [4.7, 4.1, 4.2, 3.3, 5.1, 3.5, 3.8, 3.5, 3.6] # Retorno Social del Capital (RSC)
     }
     df = pd.DataFrame(data)
     
@@ -50,40 +48,28 @@ def load_multidimensional_data():
     # 2. Factor de Penalización por Inoperatividad (P_m)
     df['P_m'] = (df['proyectos_inoperativos_liquidados'] / df['proyectos_totales']) + (df['alertas_entes_control'] * 0.1)
     
-    # 3. Índice de Sostenibilidad y Transición Productiva (IST_m)
+    # 3. Índice de Sostenibilidad y Transición Municipal (IST_m) - Reconversión de la renta minera
     df['IST_m'] = df['inversion_transicion'] / df['presupuesto_total']
     
-    # 4. Índice Multidimensional de Desarrollo Social y Capacidades (IMSC_m)
-    # Normalizamos el desempleo (menor desempleo es mejor) y ponderamos con educación, NBI, servicios y transición
-    desempleo_norm = 1 - (df['tasa_desempleo'] / 25.0)
-    educacion_norm = df['cobertura_educativa'] / 100.0
-    servicios_norm = df['acceso_servicios_publicos'] / 100.0
-    nbi_norm = df['delta_nbi'] / 6.0
+    # 4. Índice de Impacto y Eficiencia Real (IIER_m)
+    df['IIER_score'] = (0.4 * df['eficiencia_contractual'] + 0.6 * df['ER_m']) * df['delta_nbi'] * 10 - (df['P_m'] * 5)
     
-    df['IMSC_score'] = (
-        0.25 * df['IST_m'] + 
-        0.20 * educacion_norm + 
-        0.20 * servicios_norm + 
-        0.15 * nbi_norm + 
-        0.20 * desempleo_norm
-    ) * 100 - (df['P_m'] * 15)
-    
-    # 5. Clasificación según la Matriz del Semáforo Multidimensional
+    # 5. Matriz del Semáforo Oficial
     def clasificar_semaforo(row):
         if row['P_m'] > 0.3 or row['ER_m'] == 0:
-            return 'Rojo Crítico (Elefante Blanco Contable)'
-        elif row['P_m'] > 0.15 or row['IMSC_score'] < 45:
-            return 'Rojo (Ineficiencia y Baja Inclusión Social)'
-        elif row['IMSC_score'] < 60:
-            return 'Amarillo (En Desarrollo / Alerta Social)'
+            return 'Rojo Crítico (Elefante Blanco Minero)'
+        elif row['P_m'] > 0.15 or row['eficiencia_contractual'] < 0.6:
+            return 'Rojo (Ineficiencia Contractual)'
+        elif row['ER_m'] < 0.35:
+            return 'Amarillo (En Ejecución / Alerta de Gestión)'
         else:
-            return 'Verde (Inversión Transformadora y Alto Desarrollo)'
+            return 'Verde (Inversión Transformadora Post-Carbón)'
 
     df['categoria_semaforo'] = df.apply(clasificar_semaforo, axis=1)
     
     return df
 
-df = load_multidimensional_data()
+df = load_project_data()
 
 # --- Barra Lateral: Filtros ---
 st.sidebar.header("🎛️ Panel de Control y Filtros")
@@ -95,29 +81,29 @@ else:
     df_filtrado = df
 
 # --- Indicadores Globales ---
-st.header("📊 Indicadores Globales y Multidimensionales del Departamento")
+st.header("📊 Indicadores Globales de Regalías Mineras (Cesar 2020-2026)")
 col1, col2, col3, col4 = st.columns(4)
 
 presupuesto_total = df_filtrado['presupuesto_total'].sum()
-desempleo_prom = df_filtrado['tasa_desempleo'].mean()
-educacion_prom = df_filtrado['cobertura_educativa'].mean()
-imsc_prom = df_filtrado['IMSC_score'].mean()
+er_promedio = df_filtrado['ER_m'].mean() * 100
+iier_promedio = df_filtrado['IIER_score'].mean()
+ist_promedio = df_filtrado['IST_m'].mean() * 100
 
-col1.metric("Presupuesto Total SGR", f"${presupuesto_total / 1e9:,.2f} Mil M.")
-col2.metric("Promedio Tasa Desempleo", f"{desempleo_prom:.1f}%")
-col3.metric("Promedio Cobertura Educativa", f"{educacion_prom:.1f}%")
-col4.metric("Índice Multidimensional (IMSC)", f"{imsc_prom:.1f} pts")
+col1.metric("Presupuesto Regalías SGR", f"${presupuesto_total / 1e9:,.2f} Mil M.")
+col2.metric("Funcionalidad Real (ER_m)", f"{er_promedio:.1f}%")
+col3.metric("Puntaje IIER Promedio", f"{iier_promedio:.2f}")
+col4.metric("Transición Post-Carbón (IST_m)", f"{ist_promedio:.1f}%")
 
 st.markdown("---")
 
-# --- Matriz del Semáforo Multidimensional ---
-st.header("🚦 Matriz del Semáforo Multidimensional (Capacidades y Bienestar)")
+# --- Matriz del Semáforo Oficial ---
+st.header("🚦 Matriz del Semáforo: Evaluación de la Renta Minera")
 
 def obtener_badge_semaforo(cat):
     if 'Verde' in cat:
         return '🟢 **Verde (Transformador)**'
     elif 'Amarillo' in cat:
-        return '🟡 **Amarillo (Alerta Social)**'
+        return '🟡 **Amarillo (Alerta)**'
     elif 'Rojo Crítico' in cat:
         return '🚨 **Rojo Crítico (Elefante Blanco)**'
     else:
@@ -125,13 +111,13 @@ def obtener_badge_semaforo(cat):
 
 def obtener_accion_recomendada(cat):
     if 'Verde' in cat:
-        return 'Modelo de éxito. Priorizar escalabilidad y coinversión.'
+        return 'Modelo exitoso de diversificación económica. Priorizar escalabilidad.'
     elif 'Amarillo' in cat:
-        return 'Fortalecer programas de empleo juvenil y focalización educativa.'
+        return 'Monitoreo técnico preventivo frente a la dependencia extractiva.'
     elif 'Rojo Crítico' in cat:
-        return 'Acción correctiva urgente, auditoría y reporte a entes de control.'
+        return 'Reporte a Entes de Control e intervención urgente de obras inconclusas.'
     else:
-        return 'Reorientar gasto de regalías hacia sectores de alto impacto social.'
+        return 'Ajuste administrativo por retrasos contractuales severos.'
 
 df_display = df_filtrado.copy()
 df_display['Semáforo'] = df_display['categoria_semaforo'].apply(obtener_badge_semaforo)
@@ -139,35 +125,35 @@ df_display['Acción Recomendada'] = df_display['categoria_semaforo'].apply(obten
 
 st.dataframe(
     df_display[[
-        'municipio', 'Semáforo', 'tasa_desempleo', 'cobertura_educativa', 
-        'delta_nbi', 'acceso_servicios_publicos', 'IMSC_score', 'Acción Recomendada'
+        'municipio', 'Semáforo', 'ER_m', 'IST_m', 'delta_nbi', 
+        'P_m', 'IIER_score', 'Acción Recomendada'
     ]].rename(columns={
         'municipio': 'Municipio',
-        'tasa_desempleo': 'Desempleo (%)',
-        'cobertura_educativa': 'Educación (%)',
-        'delta_nbi': 'Reducción NBI',
-        'acceso_servicios_publicos': 'Servicios Púb. (%)',
-        'IMSC_score': 'Puntaje IMSC'
+        'ER_m': 'Ejecución Real (ER_m)',
+        'IST_m': 'Transición Post-Carbón (IST_m)',
+        'delta_nbi': 'Impacto Social (Δ NBI)',
+        'P_m': 'Penalización (P_m)',
+        'IIER_score': 'Puntaje IIER'
     }),
     use_container_width=True
 )
 
 st.markdown("---")
 
-# --- Gráficos Comparativos Multivariables ---
+# --- Gráficos Comparativos ---
 col_graf1, col_graf2 = st.columns(2)
 
 with col_graf1:
-    st.subheader("🎓 Cobertura Educativa vs. Desempleo (%)")
-    st.bar_chart(data=df_filtrado.set_index('municipio')[['cobertura_educativa', 'tasa_desempleo']])
+    st.subheader("📊 Comparativa de Impacto (IIER_m)")
+    st.bar_chart(data=df_filtrado.set_index('municipio')['IIER_score'])
 
 with col_graf2:
-    st.subheader("📈 Índice Multidimensional de Desarrollo (IMSC)")
-    st.bar_chart(data=df_filtrado.set_index('municipio')['IMSC_score'])
+    st.subheader("🌾 Inversión en Transición Productiva (IST_m)")
+    st.bar_chart(data=df_filtrado.set_index('municipio')['IST_m'])
 
-# --- Detalle Teórico ---
-with st.expander("ℹ️ Ver fundamentación multivariable del Enfoque de Capacidades"):
+# --- Marco Teórico ---
+with st.expander("ℹ️ Ver fundamentación sobre la Renta Minera y el Enfoque de Capacidades"):
     st.markdown("""
-    * **Desarrollo Humano (Amartya Sen):** La infraestructura y las regalías dejan de ser un fin contable y se evalúan en función de si generan empleos dignos, mejoran la educación y reducen las privaciones sociales.
-    * **Variables Integradas:** Tasa de desempleo local, cobertura educativa neta, reducción de Necesidades Básicas Insatisfechas (NBI) y acceso efectivo a servicios públicos domiciliarios.
+    * **El Reto del Post-Carbón:** Los ingresos por regalías mineras en el departamento del Cesar exigen una transformación estructural para evitar la maldición de los recursos naturales.
+    * **Transición Productiva ($IST_m$):** Evalúa qué porcentaje de los recursos de regalías se destina efectivamente a diversificar la economía hacia la agroindustria, el turismo sostenible y las energías renovables, mejorando las capacidades humanas de largo plazo según Amartya Sen.
     """)
