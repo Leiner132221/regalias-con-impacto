@@ -1,12 +1,12 @@
-# ⛏️ Regalías con Impacto: Evaluación Territorial y Social (Cesar 2020-2026)
+# ⛏️ Royalties with Impact: Territorial and Social Evaluation (Cesar 2020-2026)
 
-Plataforma web econométrica y de evaluación ex-post y ex-ante del Sistema General de Regalías (SGR), fundamentada en el **Enfoque de Capacidades de Amartya Sen**.
+Econometric and ex-post/ex-ante evaluation web platform for Colombia's General System of Royalties (SGR), based on **Amartya Sen's Capability Approach**.
 
-### 🚀 Enlace en Vivo
-👉 [Ver Dashboard en Streamlit](https://regalias-con-impacto-cesar.streamlit.app)
+### 🚀 Live Demo
+👉 [View Streamlit Dashboard](https://regalias-con-impacto-cesar.streamlit.app)
 
-### 📊 Características Principales y Modelo Matemático
-- **Detección de Elefantes Blancos ($ER_m$):** Mide la funcionalidad real frente a los registros formales del DNP.
-- **Transición Productiva ($IST_m$):** Evalúa la reconversión de la renta minera del carbón hacia agroindustria, turismo sostenible y energías renovables.
-- **Retorno Social del Capital ($RSC$):** Conecta la inversión con la reducción de Necesidades Básicas Insatisfechas (NBI) del DANE.
-- **Matriz del Semáforo:** Clasificación de riesgo territorial y generación de alertas para entes de control.
+### 📊 Main Features & Mathematical Model
+- **White Elephant Detection ($ER_m$):** Measures real physical functionality versus formal administrative records from the National Planning Department (DNP).
+- **Productive Transition ($IST_m$):** Evaluates the reconversion of coal mining royalties toward agribusiness, sustainable tourism, and renewable energy.
+- **Social Return on Capital ($RSC$):** Connects public investment with the reduction of Unmet Basic Needs (NBI) from DANE.
+- **Traffic Light Matrix:** Territorial risk classification and automated alerts for control entities.
